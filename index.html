@@ -1,15 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1.0" />
         <title>ヨットBot</title>
     </head>
     <body>
         <form id="Inputs">
             <label for="input">Input</label>
-            <input id="input" type="text" placeholder="入力はこちら">
+            <textarea id="input" placeholder="入力はこちら\n例:\nnew game\n\n次に目を入力: 1 2 3 4 5"></textarea>
             <button type="button" onclick="submitInput()">入力</button>
+            <button type="button" onclick="clearOutput()">クリア</button>
         </form>
         <form id="Outputs">
             <label for="output">Output</label>
