@@ -463,16 +463,18 @@
         }
     }
 
-    async function init() {
-        if (dpReady) return;
+    async function init(options = {}) {
+        // options.onProgress: function({ completedSlots, totalSlots, elapsedSeconds })
+        if (dpReady) return { dpReady };
         buildStaticTables();
         const cachedDP = await getDPFromDB();
         if (cachedDP) {
             DP = cachedDP instanceof Float64Array ? cachedDP : new Float64Array(cachedDP);
             dpReady = true;
-            return;
+            return { dpReady, loadedFromDB: true, timeSeconds: 0 };
         }
 
+        const onProgress = typeof options.onProgress === "function" ? options.onProgress : null;
         DP = new Float64Array(4096 * 64);
         const evRoll0 = new Float64Array(252);
         const evRoll1 = new Float64Array(252);
@@ -491,6 +493,7 @@
             maskByBits[b].push(m);
         }
 
+        const t0 = performance.now();
         for (let bits = 11; bits >= 0; bits--) {
             const masks = maskByBits[bits];
             for (let mIdx = 0; mIdx < masks.length; mIdx++) {
@@ -565,10 +568,24 @@
                     DP[mask * 64 + us] = initialEV;
                 }
             }
+
+            // notify progress: how many of the 12 slots are completed
+            if (onProgress) {
+                const completedSlots = 12 - bits; // 0..12
+                const elapsedSeconds = (performance.now() - t0) / 1000;
+                try {
+                    onProgress({ completedSlots, totalSlots: 12, elapsedSeconds });
+                } catch (e) {
+                    /* ignore callback errors */
+                }
+            }
         }
 
+        const t1 = performance.now();
+        const totalSeconds = (t1 - t0) / 1000;
         await saveDPToDB(DP);
         dpReady = true;
+        return { dpReady: true, loadedFromDB: false, timeSeconds: totalSeconds };
     }
 
     function isReady() {

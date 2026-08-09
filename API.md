@@ -16,12 +16,30 @@
 ```html
 <script src="./solver.js"></script>
 <script>
-  await YachtSolver.init();
+  // 進捗コールバックを受け取る例
+  await YachtSolver.init({
+    onProgress: ({ completedSlots, totalSlots, elapsedSeconds }) => {
+      // completedSlots: 0..12（12は完了）
+      console.log(`解析進捗: ${completedSlots}/${totalSlots} (経過 ${elapsedSeconds.toFixed(1)}s)`);
+    }
+  });
   console.log(YachtSolver.isReady());
 </script>
 ```
 
-`init()` は IndexedDB から事前計算済み DP を読み込みます。保存がない場合は完全解析を実行して DB に保存します。
+`init(options)` は IndexedDB から事前計算済み DP を読み込みます。保存がない場合は完全解析を実行して DB に保存します。`options.onProgress` が指定された場合、12段階の進捗（`completedSlots`）と経過秒数がループごとに呼ばれます。
+
+戻り値（Promise）: 初期化が完了するとオブジェクトを返します。例:
+
+```js
+// 例: { dpReady: true, loadedFromDB: false, timeSeconds: 42.3 }
+const info = await YachtSolver.init({ onProgress: cb });
+```
+
+フィールド:
+- `dpReady`: boolean
+- `loadedFromDB`: boolean（既存 DB から読み込めたか）
+- `timeSeconds`: 全計算にかかった時間（DBから読み込んだ場合は 0）
 
 ### 2. 準備完了確認
 
