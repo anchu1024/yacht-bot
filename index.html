@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
     <head>
         <meta charset="UTF-8" />
@@ -8,14 +8,13 @@
     <body>
         <form id="Inputs">
             <label for="input">Input</label>
-            <textarea id="input" placeholder="入力はこちら\n例:\nnew game\n\n次に目を入力: 1 2 3 4 5"></textarea>
+            <input id="input" type="text" placeholder="入力はこちら" />
             <button type="button" onclick="submitInput()">入力</button>
-            <button type="button" onclick="clearOutput()">クリア</button>
         </form>
         <form id="Outputs">
             <label for="output">Output</label>
             <textarea id="output" placeholder="出力はここに表示されます"></textarea>
         </form>
-        <script src="./script.js"></script>
+        <script src="./solver.js"></script>
     </body>
 </html>
