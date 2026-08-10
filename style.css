@@ -1,0 +1,30 @@
+body {
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+#container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+}
+
+#console-main {
+    position: absolute;
+    top: 0;
+    left: 0;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+}
+
+#status-display {
+    width: 400px;
+    height: 100%;
+    display: none;
+    flex-shrink: 0;
+}

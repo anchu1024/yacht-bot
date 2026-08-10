@@ -6,15 +6,11 @@
         <title>ヨットBot</title>
     </head>
     <body>
-        <form id="Inputs">
-            <label for="input">Input</label>
-            <input id="input" type="text" placeholder="入力はこちら" />
-            <button type="button" onclick="submitInput()">入力</button>
-        </form>
-        <form id="Outputs">
-            <label for="output">Output</label>
-            <textarea id="output" placeholder="出力はここに表示されます"></textarea>
-        </form>
+        <div id="container">
+            <div id="console-main"></div>
+            <div id="status-display"></div>
+        </div>
         <script src="./solver.js"></script>
+        <script src="./ui.js"></script>
     </body>
 </html>
