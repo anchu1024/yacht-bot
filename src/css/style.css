@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap");
+
 body {
     position: relative;
     margin: 0;
@@ -21,6 +23,8 @@ body {
     flex: 1;
     min-width: 0;
     height: 100%;
+    color: #eeefff;
+    font-family: Consolas, "Courier New", Courier, "Noto Sans JP", monospace;
 }
 
 #status-display {
