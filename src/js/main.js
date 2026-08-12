@@ -19,6 +19,8 @@ async function main() {
             log(
                 `[green][bold]Success![/][/] Data successfully initialized!    time : ${initInfo.timeSeconds.toFixed(1)}s`,
             );
+    } else {
+        log("[red][bold]\[ERROR\][/][/] The process failed.");
     }
 }
 
