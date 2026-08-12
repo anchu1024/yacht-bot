@@ -35,6 +35,7 @@ const COLORS = {
     foreground: "#D6DEEB",
     cursor: "#80a4c2",
     selection: "#1d3b53",
+    transparent: "#00000000",
 };
 
 function parse(str) {
@@ -126,6 +127,10 @@ function log(str, noPref = false) {
     element.innerHTML = parsed.replace(/\r?\n/g, "<br>");
     element.classList.add("log");
     ELEMENT.output.appendChild(element);
+}
+
+function emptyLine() {
+    log("[transparent]a[/]", true);
 }
 
 function logo() {
