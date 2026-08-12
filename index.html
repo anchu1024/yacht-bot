@@ -8,10 +8,16 @@
     </head>
     <body>
         <div id="container">
-            <div id="console-main"></div>
+            <div id="console-main">
+                <div id="output-display"></div>
+                <div id="input-box" data-enable="false">
+                    <span class="prompt">$> </span><span id="user-input"></span><span class="cursor">█</span>
+                </div>
+            </div>
             <div id="status-display"></div>
         </div>
         <script src="./src/js/solver.js"></script>
         <script src="./src/js/ui.js"></script>
+        <script src="./src/js/main.js"></script>
     </body>
 </html>

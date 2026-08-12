@@ -1,4 +1,15 @@
-const consoleBody = document.querySelector("#console-main");
+const ELEMENT = {
+    console: document.querySelector("#console-main"),
+    output: document.querySelector("#output-display"),
+    inputBox: document.querySelector("#input-box"),
+    input: document.querySelector("#user-input"),
+    cursor: document.querySelector(".cursor"),
+};
+
+const STAT = {
+    inputEnable: false,
+    userInputPromise: null,
+};
 
 const COLORS = {
     // Normal
@@ -27,37 +38,135 @@ const COLORS = {
 };
 
 function parse(str) {
-    // 1. 最初に環境依存の「¥」をすべて「\」に統一（これで誤判定の芽を摘みます）
+    // 1. 最初に環境依存の「¥」をすべて「\\」に統一
     let normalized = str.replaceAll("¥", "\\");
+    let result = "";
+    let openTags = [];
 
-    // 2. 正規表現も「\」だけに特化させてシンプルに
-    const tag = /(?<!\\)\[((?:\\.|[^\]])*?)(?<!\\)\]/g;
+    for (let i = 0; i < normalized.length; i += 1) {
+        const char = normalized[i];
 
-    // タグを HTML に置換
-    let result = normalized.replace(tag, (match, ctx) => {
-        if (!ctx) return;
-        if (ctx.startsWith("bg-")) {
-            ctx = ctx.replace("bg-", "");
-            if (Object.hasOwn(COLORS, ctx)) return `<span style="background-color:${COLORS[ctx]};">`;
+        // エスケープされた括弧はそのまま表示する
+        if (char === "\\" && i + 1 < normalized.length) {
+            const next = normalized[i + 1];
+            if (next === "[" || next === "]") {
+                result += next;
+                i += 1;
+                continue;
+            }
         }
-        if (Object.hasOwn(COLORS, ctx)) return `<span style="color:${COLORS[ctx]};">`;
-        if (ctx === "bold") return `<span style="font-weight:bold;">`;
-        if (ctx === "italic") return `<span style="font-style:italic;">`;
-        if (ctx === "/") return `</span>`;
-        return `<span>`;
-    });
 
-    // 3. 最後にエスケープ用の「\」を綺麗にお掃除
-    const escape = /\\([\[\]])/g;
-    return result.replace(escape, "$1");
+        if (char === "[") {
+            const end = normalized.indexOf("]", i + 1);
+            if (end !== -1) {
+                const inner = normalized.slice(i + 1, end);
+
+                if (inner === "/") {
+                    if (openTags.length > 0) {
+                        openTags.pop();
+                        result += "</span>";
+                    } else {
+                        result += "[/]";
+                    }
+                    i = end;
+                    continue;
+                }
+
+                let style = "";
+                let isKnownTag = false;
+
+                if (inner.startsWith("bg-")) {
+                    const colorName = inner.slice(3);
+                    if (Object.hasOwn(COLORS, colorName)) {
+                        style = `background-color:${COLORS[colorName]};`;
+                        isKnownTag = true;
+                    }
+                }
+
+                if (!isKnownTag && Object.hasOwn(COLORS, inner)) {
+                    style = `color:${COLORS[inner]};`;
+                    isKnownTag = true;
+                }
+
+                if (!isKnownTag && inner === "bold") {
+                    style = "font-weight:bold;";
+                    isKnownTag = true;
+                }
+
+                if (!isKnownTag && inner === "italic") {
+                    style = "font-style:italic;";
+                    isKnownTag = true;
+                }
+
+                if (isKnownTag) {
+                    openTags.push(style);
+                    result += `<span style="${style}">`;
+                    i = end;
+                    continue;
+                }
+            }
+        }
+
+        result += char;
+    }
+
+    return result;
 }
 
-function log(str) {
-    const formalized = "[blue]Bot>[/] " + str;
-    const parsed = parse(formalized);
+function log(str, noPref = false) {
+    const formalized = (noPref ? "" : "[blue]Bot>[/] ") + str.trim();
+    const escaped = formalized
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    const parsed = parse(escaped);
     const element = document.createElement("div");
-    element.innerHTML = parsed;
-    consoleBody.appendChild(element);
+    element.innerHTML = parsed.replace(/\r?\n/g, "<br>");
+    element.classList.add("log");
+    ELEMENT.output.appendChild(element);
 }
 
-log("hello world! こんにちは世界!");
+function logo() {
+    // どでかYacht BotをTiny5で描画
+    const el = document.createElement("div");
+    el.innerHTML = `<span style="font-family: 'Tiny5', 'Courier New', Courier; font-weight: bold; font-size: 50px;">Yacht Bot</span>`;
+    ELEMENT.output.appendChild(el);
+}
+
+function userInput() {
+    STAT.inputEnable = true;
+    ELEMENT.inputBox.dataset.enable = true;
+    return new Promise((resolve, reject) => {
+        STAT.userInputPromise = resolve;
+    });
+}
+
+document.addEventListener("keydown", (e) => {
+    if (!STAT.inputEnable) return;
+
+    if (e.ctrlKey) return;
+
+    const key = e.key;
+    if (key.length === 1 && key.charCodeAt(0) >= 32 && key.charCodeAt(0) <= 126) {
+        ELEMENT.input.textContent += key;
+    }
+
+    if (key === "Backspace") {
+        ELEMENT.input.textContent = ELEMENT.input.textContent.slice(0, -1);
+    }
+
+    if (key === "Tab") {
+        e.preventDefault();
+        ELEMENT.input.textContent += "    ";
+    }
+
+    if (key === "Enter") {
+        if (!STAT.userInputPromise) return;
+        userInputPromise(ELEMENT.input.textContent);
+        ELEMENT.input.textContent = "";
+        STAT.inputEnable = false;
+        ELEMENT.inputBox.dataset.enable = false;
+    }
+});
