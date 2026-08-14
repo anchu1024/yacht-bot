@@ -15,9 +15,9 @@ Fundamental
 * [bg-selection] help [/] : Show help
 * [bg-selection] stop [/] : Exit current process / game
 * [bg-selection] mode [/] : Show the current mode (Use this when you're lost)
-* [bg-selection] rule [/] : Show Yacht rule
+* [bg-selection] rule [/] : Show the Yacht rules
 * [bg-selection] clear [/] : Clear the screen
-* [bg-selection] about [/] : Show about me!
+* [bg-selection] about [/] : Show information about me!
 Settings
 * [bg-selection] help on [/] : Print [italic]"Type [bg-selection] help [/] to show help."[/]
 * [bg-selection] help off [/] : Stop printing [italic]"Type [bg-selection] help [/] to show help."[/]
