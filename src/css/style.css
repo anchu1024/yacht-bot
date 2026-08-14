@@ -28,6 +28,15 @@ body {
     padding-left: 10px;
 }
 
+#console-main a {
+    color: #21c7a8;
+}
+
+#console-main a:hover {
+    background: #21c7a8;
+    color: #eeefff;
+}
+
 #output-display {
     width: 100%;
     height: auto;

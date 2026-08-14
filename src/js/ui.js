@@ -9,7 +9,29 @@ const ELEMENT = {
 const STAT = {
     inputEnable: false,
     userInputPromise: null,
+    mode: null,
 };
+
+const META = {
+    version: "v1.0.0",
+    build: "2026-08-14",
+    author: "X+C Core",
+    jsRequirement: "ES2022+",
+    browserRequirements: {
+        chrome: "92+",
+        edge: "92+",
+        firefox: "92+",
+        safari: "15.4+",
+    },
+};
+
+const INIT_SETTINGS = {
+    guideEnable: true,
+};
+
+const LOCKED_SETTINGS = [];
+
+let SETTINGS = deepcopy(INIT_SETTINGS);
 
 const COLORS = {
     // Normal
@@ -114,14 +136,9 @@ function parse(str) {
     return result;
 }
 
-function log(str, noPref = false) {
-    const formalized = (noPref ? "" : "[blue]Bot>[/] ") + str.trim();
-    const escaped = formalized
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
+function log(str, { pref = true, escape = true } = {}) {
+    const formalized = (pref ? "[blue]Bot>[/] " : "") + str;
+    const escaped = escape ? escapeHtml(formalized) : formalized;
     const parsed = parse(escaped);
     const element = document.createElement("div");
     element.innerHTML = parsed.replace(/\r?\n/g, "<br>");
@@ -130,14 +147,27 @@ function log(str, noPref = false) {
 }
 
 function emptyLine() {
-    log("[transparent]a[/]", true);
+    log("[transparent]a[/]", { pref: false });
 }
 
 function logo() {
     // どでかYacht BotをTiny5で描画
     const el = document.createElement("div");
-    el.innerHTML = `<span style="font-family: 'Tiny5', 'Courier New', Courier; font-weight: bold; font-size: 50px;">Yacht Bot</span>`;
+    el.innerHTML = `<span style="font-family: 'Tiny5', 'Courier New', Courier; font-weight: bold; font-size: 50px;">Yacht Bot</span> ${SETTINGS.version}`;
     ELEMENT.output.appendChild(el);
+}
+
+function kill(silent = false) {
+    if (silent) throw new Error("process killed (silent)");
+    throw new Error("process killed");
+}
+
+async function input() {
+    const res = await userInput();
+    if (res === "stop") {
+        kill();
+    }
+    return res;
 }
 
 function userInput() {
@@ -148,6 +178,103 @@ function userInput() {
     });
 }
 
+/**
+ * 文字列・値のハイライト処理
+ */
+function syntaxHighlight(str) {
+    if (typeof str === "object") str = JSON.stringify(str);
+    else if (typeof str !== "string") str = String(str);
+
+    // クォートで囲まれた文字列
+    if (/^["'].*["']$/.test(str)) {
+        return `<span style="color: ${COLORS.purple};">${escapeHtml(str)}</span>`;
+    }
+
+    if (/^true|false|null$/.test(str)) {
+        return `<span style="color: ${COLORS.red};">${escapeHtml(str)}</span>`;
+    }
+
+    if (str === "undefined") {
+        return `<span style="color: ${COLORS.blue};">${escapeHtml(str)}</span>`;
+    }
+
+    if (!Number.isNaN(Number(str))) {
+        return `<span style="color: ${COLORS.green};">${escapeHtml(str)}</span>`;
+    }
+
+    // 通常の引数や数値
+    return escapeHtml(str);
+}
+
+/**
+ * ターミナル入力のパーサー（スペース保持版）
+ */
+function parseInput(str) {
+    if (str == null) return "";
+
+    // トークン単位に分割する正規表現
+    // 1. ダブルクォート文字列
+    // 2. シングルクォート文字列
+    // 3. オプション (--flag, -f, --key="val" など)
+    // 4. 行末コメント (// ..., # ...)
+    // 5. 空白文字の連続 (\s+)
+    // 6. その他の単語 (\S+)
+    const tokenRegex =
+        /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|--?[a-zA-Z0-9-]+(?:=(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\S+))?|\/\/.*$|#.*$|\s+|\S+/g;
+
+    const tokens = str.match(tokenRegex);
+    if (!tokens) return escapeHtml(str);
+
+    let isFirstToken = true;
+
+    const highlightedTokens = tokens.map((token) => {
+        // 空白文字（スペースやタブ等）はそのまま返す（コマンド判定も進めない）
+        if (/^\s+$/.test(token)) {
+            return token;
+        }
+
+        // コメント処理
+        if (token.startsWith("//") || token.startsWith("#")) {
+            return `<span style="color: ${COLORS.brightBlack};">${escapeHtml(token)}</span>`;
+        }
+
+        // 先頭の非空白単語（コマンド名）
+        if (isFirstToken) {
+            isFirstToken = false;
+            return `<span style="color: ${COLORS.brightYellow};">${escapeHtml(token)}</span>`;
+        }
+
+        // オプション (--option, -o, --key=value)
+        if (token.startsWith("-")) {
+            if (token.includes("=")) {
+                const [opt, ...valParts] = token.split("=");
+                const val = valParts.join("=");
+                return `<span style="color: ${COLORS.brightBlack};">${escapeHtml(opt)}</span>=` + syntaxHighlight(val);
+            }
+            return `<span style="color: ${COLORS.brightBlack};">${escapeHtml(token)}</span>`;
+        }
+
+        // その他の引数またはクォート文字列
+        return syntaxHighlight(token);
+    });
+
+    // 区切り文字なしでそのまま結合することで元の空白構造を完全維持
+    return highlightedTokens.join("");
+}
+
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function deepcopy(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+
 document.addEventListener("keydown", (e) => {
     if (!STAT.inputEnable) return;
 
@@ -156,6 +283,10 @@ document.addEventListener("keydown", (e) => {
     const key = e.key;
     if (key.length === 1 && key.charCodeAt(0) >= 32 && key.charCodeAt(0) <= 126) {
         ELEMENT.input.textContent += key;
+    }
+
+    if (key === "Space") {
+        ELEMENT.input.textContent += " ";
     }
 
     if (key === "Backspace") {
@@ -169,9 +300,13 @@ document.addEventListener("keydown", (e) => {
 
     if (key === "Enter") {
         if (!STAT.userInputPromise) return;
-        userInputPromise(ELEMENT.input.textContent);
+        const res = ELEMENT.input.textContent.trim();
+        STAT.userInputPromise(res);
         ELEMENT.input.textContent = "";
         STAT.inputEnable = false;
         ELEMENT.inputBox.dataset.enable = false;
+        log(`${escapeHtml(">")} ${parseInput(res)}`, { pref: false, escape: false });
     }
+
+    ELEMENT.input.innerHTML = parseInput(ELEMENT.input.textContent);
 });
