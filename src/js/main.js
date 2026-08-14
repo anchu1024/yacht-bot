@@ -8,6 +8,7 @@ const COMMAND = {
     setting: changeSetting,
     about: showAbout,
     rule: showRule,
+    teach: startTeachMode,
 };
 
 const HELP_TEXT = `[bold]COMMAND LIST[/]
@@ -243,5 +244,7 @@ async function handleCommand(cmd) {
         kill(true);
     }
 }
+
+async function startTeachMode() {}
 
 main();
