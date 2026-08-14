@@ -7,21 +7,26 @@ const COMMAND = {
     reset: resetSettings,
     setting: changeSetting,
     about: showAbout,
+    rule: showRule,
 };
 
 const HELP_TEXT = `[bold]COMMAND LIST[/]
+Fundamental
 * [bg-selection] help [/] : Show help
 * [bg-selection] stop [/] : Exit current process / game
 * [bg-selection] mode [/] : Show the current mode (Use this when you're lost)
-* [bg-selection] help on [/] : Print [italic]"Type [bg-selection] help [/] to show help."[/]
-* [bg-selection] help off [/] : Stop printing [italic]"Type [bg-selection] help [/] to show help."[/]
+* [bg-selection] rule [/] : Show Yacht rule
 * [bg-selection] clear [/] : Clear the screen
 * [bg-selection] about [/] : Show about me!
+Settings
+* [bg-selection] help on [/] : Print [italic]"Type [bg-selection] help [/] to show help."[/]
+* [bg-selection] help off [/] : Stop printing [italic]"Type [bg-selection] help [/] to show help."[/]
 * [bg-selection] version [/] : Show Yacht Bot version and build info
 * [bg-selection] settings [/] : Show all current settings (guide mode, teaching mode status, etc.)
 * [bg-selection] settings \[key\] [/] : Display the setting value for the specified key.
 * [bg-selection] setting \[setting name\] \[new value\] [/] : Change the specified setting to the given value.
 * [bg-selection] reset [/] : Reset all settings to default
+Game
 * [bg-selection] teach [/] : Start [bold]teaching mode[/]
     >> Teaching Mode: If you enter your current Yacht game state (dice, actions, etc.) from any app, I will tell you the best move.
 * [bg-selection] game [/] : Start Yacht with me.
@@ -42,6 +47,11 @@ const SYSTEM_INFO_TXT = `[bold]SYSTEM INFO[/]
 const ABOUT = `[bold]ABOUT[/]
 Terminal風のヨットのボットです。
 基本英語なので無理な方は<a href="../ja/index.html">こちら</a>
+`;
+
+const RULE = `[bold]RULE[/]
+ここでは昔ながらのヨットのルールを採用しています。
+ルールの詳細は<a target="_blank" rel="noopener noreferrer nofollow" href="https://psmgp.com/yahtzee">こちら(外部リンク)</a>
 `;
 
 function help([val] = []) {
@@ -142,6 +152,12 @@ function searchAndChange(obj, key, val) {
 
 function showAbout() {
     log(ABOUT, { pref: false, escape: false });
+    emptyLine();
+}
+
+function showRule() {
+    log(RULE, { pref: false, escape: false });
+    emptyLine();
 }
 
 async function main() {

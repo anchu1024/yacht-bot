@@ -144,6 +144,9 @@ function log(str, { pref = true, escape = true } = {}) {
     element.innerHTML = parsed.replace(/\r?\n/g, "<br>");
     element.classList.add("log");
     ELEMENT.output.appendChild(element);
+    requestAnimationFrame(() => {
+        ELEMENT.console.scrollTop = ELEMENT.console.scrollHeight;
+    });
 }
 
 function emptyLine() {
@@ -153,7 +156,7 @@ function emptyLine() {
 function logo() {
     // どでかYacht BotをTiny5で描画
     const el = document.createElement("div");
-    el.innerHTML = `<span style="font-family: 'Tiny5', 'Courier New', Courier; font-weight: bold; font-size: 50px;">Yacht Bot</span> ${SETTINGS.version}`;
+    el.innerHTML = `<span style="font-family: 'Tiny5', 'Courier New', Courier; font-weight: bold; font-size: 50px;">Yacht Bot</span> ${META.version}`;
     ELEMENT.output.appendChild(el);
 }
 
