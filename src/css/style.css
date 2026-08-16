@@ -6,6 +6,8 @@ body {
     height: 100vh;
     margin: 0;
     padding: 0;
+    font-family: Consolas, "Courier New", Courier, "Noto Sans JP", monospace;
+    color: #eeefff;
     background: #011627;
 }
 
@@ -66,4 +68,54 @@ body {
     height: 100%;
     display: none;
     flex-shrink: 0;
+    padding: 10px;
+    box-sizing: border-box;
+    border: #eeefff solid 2px;
+    overflow-y: auto;
+}
+
+#status-header {
+    font-size: 30px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+hr {
+    border: none;
+    height: 2px;
+    background-color: #eeefff; /* 好きな色 */
+}
+
+#status-display .header2 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+#status-display table {
+    margin: 10px;
+    border-collapse: collapse;
+    border: #eeefff solid 5px;
+}
+
+#status-display caption {
+    font-weight: bold;
+}
+
+#status-display thead,
+#status-display tfoot {
+    background-color: #1d3b53;
+}
+
+#status-display th,
+#status-display td {
+    border: 2px solid #eeefff;
+    padding: 5px 10px;
+    text-align: center;
+}
+
+#status-display tr.used {
+    background-color: #eeefff;
+    color: #011627;
+    border-color: #1d3b53;
 }

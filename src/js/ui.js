@@ -4,6 +4,17 @@ const ELEMENT = {
     inputBox: document.querySelector("#input-box"),
     input: document.querySelector("#user-input"),
     cursor: document.querySelector(".cursor"),
+    status: document.querySelector("#status-display"),
+    game: {
+        turn: document.querySelector("#turn-display"),
+        roll: document.querySelector("#rolls-display"),
+        score: document.querySelector("#score-display"),
+        roleDisplay: {
+            row: [],
+            name: [],
+            point: [],
+        },
+    },
 };
 
 const COLORS = {

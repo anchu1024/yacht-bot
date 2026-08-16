@@ -14,11 +14,36 @@
                     <span class="prompt">$> </span><span id="user-input"></span><span class="cursor">█</span>
                 </div>
             </div>
-            <div id="status-display"></div>
+            <div id="status-display">
+                <div id="status-header">STATUS DISPLAY</div>
+                <hr />
+                <div class="header2">TURN</div>
+                <div id="turn-display"></div>
+                <div id="rolls-display"></div>
+                <div class="header2">SCORE & ROLE</div>
+                <div id="score-display"></div>
+                <table>
+                    <caption>
+                        ROLE TABLE
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">NAME</th>
+                            <th scope="col">POINT</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
         <script src="./src/js/solver.js"></script>
         <script src="./src/js/utils.js"></script>
         <script src="./src/js/ui.js"></script>
+        <!-- Dialog (English) -->
+        <script src="./src/dialogue/common.js"></script>
+        <script src="./src/dialogue/en.js"></script>
+        <!---->
+        <script src="./src/js/game.js"></script>
         <script src="./src/js/main.js"></script>
     </body>
 </html>

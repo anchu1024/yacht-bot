@@ -37,7 +37,7 @@
 
     function getDPFromDB() {
         return new Promise((resolve) => {
-            const req = indexedDB.open("YachtDB_Clubhouse", 1);
+            const req = indexedDB.open("YachtDB_Clubhouse4", 1);
             req.onupgradeneeded = (e) => createObjectStore(e.target.result);
             req.onsuccess = (e) => {
                 const db = e.target.result;
@@ -52,7 +52,7 @@
 
     function saveDPToDB(dpArray) {
         return new Promise((resolve) => {
-            const req = indexedDB.open("YachtDB_Clubhouse", 1);
+            const req = indexedDB.open("YachtDB_Clubhouse4", 1);
             req.onupgradeneeded = (e) => createObjectStore(e.target.result);
             req.onsuccess = (e) => {
                 const db = e.target.result;

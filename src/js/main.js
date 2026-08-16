@@ -11,63 +11,24 @@ const COMMAND = {
     teach: startTeachMode,
 };
 
-const HELP_TEXT = `[bold]COMMAND LIST[/]
-Fundamental
-* [bg-selection] help [/] : Show help
-* [bg-selection] stop [/] : Exit current process / game
-* [bg-selection] mode [/] : Show the current mode (Use this when you're lost)
-* [bg-selection] rule [/] : Show the Yacht rules
-* [bg-selection] clear [/] : Clear the screen
-* [bg-selection] about [/] : Show information about me!
-Settings
-* [bg-selection] help on [/] : Print [italic]"Type [bg-selection] help [/] to show help."[/]
-* [bg-selection] help off [/] : Stop printing [italic]"Type [bg-selection] help [/] to show help."[/]
-* [bg-selection] version [/] : Show Yacht Bot version and build info
-* [bg-selection] settings [/] : Show all current settings (guide mode, teaching mode status, etc.)
-* [bg-selection] settings \[key\] [/] : Display the setting value for the specified key.
-* [bg-selection] setting \[setting name\] \[new value\] [/] : Change the specified setting to the given value.
-* [bg-selection] reset [/] : Reset all settings to default
-Game
-* [bg-selection] teach [/] : Start [bold]teaching mode[/]
-    >> Teaching Mode: If you enter your current Yacht game state (dice, actions, etc.) from any app, I will tell you the best move.
-* [bg-selection] game [/] : Start Yacht with me.
-`;
-
-const SYSTEM_INFO_TXT = `[bold]SYSTEM INFO[/]
-* [yellow]version[/] : ${META.version}
-* [yellow]build date[/] : ${META.build}
-* [yellow]author[/] : ${META.author}
-* [yellow]ecma version[/] : ${META.jsRequirement}
-    Requirements
-    * [yellow]Chrome[/] : ${META.browserRequirements.chrome}
-    * [yellow]Edge[/] : ${META.browserRequirements.edge}
-    * [yellow]Firefox[/] : ${META.browserRequirements.firefox}
-    * [yellow]Safari[/] : ${META.browserRequirements.safari}
-`;
-
-const ABOUT = `[bold]ABOUT[/]
-Terminal風のヨットのボットです。
-基本英語なので無理な方は<a href="../ja/index.html">こちら</a>
-`;
-
-const RULE = `[bold]RULE[/]
-ここでは昔ながらのヨットのルールを採用しています。
-ルールの詳細は<a target="_blank" rel="noopener noreferrer nofollow" href="https://psmgp.com/yahtzee">こちら(外部リンク)</a>
-`;
+const TEACH_COMMAND = inherit(COMMAND, {
+    // 後で追加する。keepやterminal(act)など
+});
 
 function help([val] = []) {
     if (val === undefined) {
-        log(HELP_TEXT, { pref: false });
+        DIALOGUE.home.help.log();
         emptyLine();
     } else {
         const newVal = val === "on" ? true : false;
         SETTINGS.guideEnable = newVal;
-        log(`[cyan]\[LOG\] Settings changed![/] Help guide ${newVal ? "enabled" : "disabled"}.`);
+        if (newVal) DIALOGUE.home.toggleHelp.enable.log();
+        else DIALOGUE.home.toggleHelp.disable.log();
     }
 }
 
 function showMode() {
-    log(`[bold]Mode : ${STAT.mode}[/]`);
+    DIALOGUE.mode.display.log(STAT.mode);
 }
 
 function CLS() {
@@ -75,7 +36,7 @@ function CLS() {
 }
 
 function showVersion() {
-    log(SYSTEM_INFO_TXT, { pref: false });
+    DIALOGUE.systemInfo.log();
     emptyLine();
 }
 
@@ -83,11 +44,11 @@ function showSettings([key] = []) {
     if (key !== undefined && !key.startsWith("-")) {
         console.log(key);
         const val = search(SETTINGS, key);
-        if (val === "No item found") log(`[red]Invaild setting key[/]`);
+        if (val === "No item found") DIALOGUE.settings.invaildKey.log();
         else log(`* [yellow]${key}[/] : ${syntaxHighlight(val)}`, { pref: false, escape: false });
         return;
     }
-    log("[bold]SETTINGS[/]", { pref: false });
+    DIALOGUE.settings.title.log();
     expandSettings(SETTINGS);
     emptyLine();
 }
@@ -123,22 +84,27 @@ function expandSettings(obj) {
 
 function resetSettings() {
     SETTINGS = deepcopy(INIT_SETTINGS);
-    log("[cyan]\[LOG\] Settings changed![/] All settings reset");
+    DIALOGUE.settings.reset.log();
 }
 
 function changeSetting([key, val] = []) {
     if (LOCKED_SETTINGS.includes(key)) {
-        log(`[red]"${key}" cannot be changed[/]`);
+        DIALOGUE.settings.locked.log(key);
         kill(true);
     }
-    const res = searchAndChange(SETTINGS, key, val);
-    if (res) log(`[cyan]\[LOG\] Settings changed![/] key: ${key}, new value: ${val}`);
-    else log(`[red]failed to change settings. key: ${key}, new value: ${val}[/]`);
+    try {
+        const res = searchAndChange(SETTINGS, key, val);
+        if (res) DIALOGUE.settings.success.log(key, val);
+        else DIALOGUE.settings.reject.log(key, val);
+    } catch (e) {
+        DIALOGUE.settings.invalidType.log(key, ALLOWED_VALUES[key].map((el) => `[italic]${String(el)}[/]`).join(", "));
+    }
 }
 
 function searchAndChange(obj, key, val) {
     for (const k of Object.keys(obj)) {
         if (k === key) {
+            if (!ALLOWED_VALUES[k].includes(val)) throw new Error("Invalid type");
             obj[k] = val;
             return true;
         }
@@ -152,55 +118,50 @@ function searchAndChange(obj, key, val) {
 }
 
 function showAbout() {
-    log(ABOUT, { pref: false, escape: false });
+    DIALOGUE.about.log();
     emptyLine();
 }
 
 function showRule() {
-    log(RULE, { pref: false, escape: false });
+    DIALOGUE.home.rule.log();
     emptyLine();
 }
 
 async function main() {
     logo();
-    log("[bold]Welcome to Yacht Bot![/] Here you can [bold]play Yacht[/], and I can be [bold]your Yacht teacher[/]!", {
-        pref: false,
-    });
+    DIALOGUE.welcome.log();
     emptyLine();
-    log("Initializing data...");
+    DIALOGUE.init.startInit.log();
     const initInfo = await YachtSolver.init({
         onProgress: ({ completedSlots, totalSlots, elapsedSeconds }) => {
-            log(`Processing... ${completedSlots} / ${totalSlots} done!    time : ${elapsedSeconds.toFixed(1)}s`);
+            DIALOGUE.init.progress.log(completedSlots, totalSlots, elapsedSeconds.toFixed(1));
         },
     });
     if (initInfo.dpReady) {
         if (initInfo.loadedFromDB) {
-            log("[red]Data was already cached. Loading it...[/]");
-            log("[green][bold]Success![/][/] Data successfully loaded!");
-        } else
-            log(
-                `[green][bold]Success![/][/] Data successfully initialized!    time : ${initInfo.timeSeconds.toFixed(1)}s`,
-            );
+            DIALOGUE.init.loadFromDB.log();
+            DIALOGUE.init.successLoading.log();
+        } else DIALOGUE.init.successInit.log(initInfo.timeSeconds.toFixed(1));
     } else {
-        log("[red][bold]\[ERROR\][/][/] The process failed.");
+        DIALOGUE.init.fail.log();
     }
     emptyLine();
-    log("Hello! I'm [bold]Yachty[/].");
+    DIALOGUE.greeting.log();
     startREPL();
 }
 
 async function startREPL() {
     while (true) {
-        if (SETTINGS.guideEnable) log("Type [bg-selection] help [/] to show help.");
-        STAT.mode = "Home (choose a mode)";
+        if (SETTINGS.guideEnable) DIALOGUE.home.helpGuide.log();
+        STAT.mode = DIALOGUE.mode.home.get();
         try {
             const command = await input();
             await handleCommand(command);
         } catch (e) {
             if (e.message === "process killed") {
-                log("Exit current process");
+                DIALOGUE.exit.log();
             } else if (e.message !== "process killed (silent)") {
-                log("Sorry, error detected.");
+                DIALOGUE.error.log();
                 log(`[red]\[ERROR\][/] ${e.stack}`);
             }
         }
@@ -217,14 +178,17 @@ function parseCommand(cmd) {
         (token) => !/^\s+$/.test(token) && !token.startsWith("//") && !token.startsWith("#"),
     );
     const command = filtered[0];
-    const args = filtered.slice(1).filter((token) => !token.startsWith("-"));
+    const args = filtered
+        .slice(1)
+        .filter((token) => !token.startsWith("-"))
+        .map((el) => normalize(el));
     const options = filtered.filter((token) => token.startsWith("-"));
     const formattedOptions = {};
     for (const opt of options) {
         if (opt.includes("=")) {
             const [key, ...vals] = opt.split("=");
             const val = vals[0];
-            formattedOptions[key] = val;
+            formattedOptions[key] = normalize(val);
         } else {
             formattedOptions[opt] = true;
         }
@@ -233,18 +197,34 @@ function parseCommand(cmd) {
     return [command, args, options];
 }
 
-async function handleCommand(cmd) {
+async function handleCommand(cmd, list = COMMAND) {
     const res = parseCommand(cmd);
     const head = res[0];
     const args = res[1];
     const opts = res[2];
-    if (Object.hasOwn(COMMAND, head)) await COMMAND[head](args, opts);
+    if (Object.hasOwn(list, head)) await list[head](args, opts);
     else {
-        log("[red]ERROR : Command not found[/]");
+        DIALOGUE.cmdNotFound.log();
         kill(true);
     }
 }
 
-async function startTeachMode() {}
+async function startTeachMode() {
+    STAT.mode = DIALOGUE.mode.teach.get();
+    initStatus();
+    DIALOGUE.teach.start.log();
+    DIALOGUE.teach.guide.log();
+    try {
+        do {
+            const cmd = await input();
+            handleCommand(cmd, TEACH_COMMAND);
+        } while (!GAME.finish);
+    } catch (e) {
+        if (e.message === "process killed") {
+            ELEMENT.status.style.display = "none";
+            kill();
+        }
+    }
+}
 
 main();
