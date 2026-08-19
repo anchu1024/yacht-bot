@@ -1,4 +1,4 @@
-class Dialog {
+class Dialogue {
     constructor(str, pref = true, escape = true) {
         this.str = str;
         this.pref = pref;
@@ -18,3 +18,5 @@ class Dialog {
         log(str, { pref: this.pref, escape: this.escape });
     }
 }
+
+let DIALOGUE;

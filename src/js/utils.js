@@ -2,6 +2,7 @@ const STAT = {
     inputEnable: false,
     userInputPromise: null,
     mode: null,
+    modeInternal: null,
 };
 
 const META = {
@@ -18,10 +19,12 @@ const META = {
 };
 
 const INIT_SETTINGS = {
+    language: "en",
     guideEnable: true,
 };
 
 const ALLOWED_VALUES = {
+    language: ["en", "ja"],
     guideEnable: [true, false],
 };
 

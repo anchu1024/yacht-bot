@@ -12,12 +12,15 @@ const COMMAND = {
 };
 
 const TEACH_COMMAND = inherit(COMMAND, {
-    // 後で追加する。keepやterminal(act)など
+    dice: loadDice,
+    set: chooseRole,
+    undo: undo,
 });
 
 function help([val] = []) {
     if (val === undefined) {
-        DIALOGUE.home.help.log();
+        if (STAT.modeInternal === "home") DIALOGUE.home.help.log();
+        if (STAT.modeInternal === "teach") DIALOGUE.teach.help.log();
         emptyLine();
     } else {
         const newVal = val === "on" ? true : false;
@@ -94,10 +97,20 @@ function changeSetting([key, val] = []) {
     }
     try {
         const res = searchAndChange(SETTINGS, key, val);
-        if (res) DIALOGUE.settings.success.log(key, val);
-        else DIALOGUE.settings.reject.log(key, val);
+        if (res) {
+            DIALOGUE.settings.success.log(key, val);
+            changeLanguage();
+        } else DIALOGUE.settings.reject.log(key, val);
     } catch (e) {
         DIALOGUE.settings.invalidType.log(key, ALLOWED_VALUES[key].map((el) => `[italic]${String(el)}[/]`).join(", "));
+    }
+}
+
+function changeLanguage() {
+    if (SETTINGS.language === "en") {
+        DIALOGUE = DIALOGUE_EN;
+    } else if (SETTINGS.language === "ja") {
+        DIALOGUE = DIALOGUE_JA;
     }
 }
 
@@ -123,11 +136,44 @@ function showAbout() {
 }
 
 function showRule() {
-    DIALOGUE.home.rule.log();
+    if (STAT.modeInternal === "home") DIALOGUE.home.rule.log();
+    if (STAT.modeInternal === "teach") DIALOGUE.teach.rule.log();
     emptyLine();
 }
 
+function loadDice(dice) {
+    if (GAME.rollsLeft < 0) {
+        DIALOGUE.game.noRollsLeft.log();
+        return;
+    }
+    if (dice.length < 5) {
+        DIALOGUE.teach.diceRejectMin.log();
+        return;
+    }
+    if (dice.length > 5) {
+        DIALOGUE.teach.diceRejectMax.log();
+        return;
+    }
+    if (Math.min(...dice) >= 1 && Math.max(...dice) <= 6) {
+        const arr = [...dice].sort();
+        for (let i = 0; i < 5; i++) GAME.dice[i] = arr[i];
+        teacherReponse();
+    } else {
+        DIALOGUE.game.invalidDiceRoll.log();
+        return;
+    }
+}
+
+function chooseRole([role] = []) {
+    if (role === undefined) {
+        DIALOGUE.game.roleEmpty.log();
+        return;
+    }
+    choose(role);
+}
+
 async function main() {
+    changeLanguage();
     logo();
     DIALOGUE.welcome.log();
     emptyLine();
@@ -154,6 +200,7 @@ async function startREPL() {
     while (true) {
         if (SETTINGS.guideEnable) DIALOGUE.home.helpGuide.log();
         STAT.mode = DIALOGUE.mode.home.get();
+        STAT.modeInternal = "home";
         try {
             const command = await input();
             await handleCommand(command);
@@ -211,14 +258,15 @@ async function handleCommand(cmd, list = COMMAND) {
 
 async function startTeachMode() {
     STAT.mode = DIALOGUE.mode.teach.get();
+    STAT.modeInternal = "teach";
     initStatus();
     DIALOGUE.teach.start.log();
     DIALOGUE.teach.guide.log();
     try {
-        do {
+        while (true) {
             const cmd = await input();
             handleCommand(cmd, TEACH_COMMAND);
-        } while (!GAME.finish);
+        }
     } catch (e) {
         if (e.message === "process killed") {
             ELEMENT.status.style.display = "none";

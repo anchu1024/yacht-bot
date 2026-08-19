@@ -8,6 +8,7 @@ const ELEMENT = {
     game: {
         turn: document.querySelector("#turn-display"),
         roll: document.querySelector("#rolls-display"),
+        dice: document.querySelector("#dice-display"),
         score: document.querySelector("#score-display"),
         roleDisplay: {
             row: [],
@@ -284,6 +285,7 @@ document.addEventListener("keydown", (e) => {
     if (key === "Enter") {
         if (!STAT.userInputPromise) return;
         const res = ELEMENT.input.textContent.trim();
+        if (res === "") return;
         STAT.userInputPromise(res);
         ELEMENT.input.textContent = "";
         STAT.inputEnable = false;

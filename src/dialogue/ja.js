@@ -1,0 +1,1 @@
+const DIALOGUE_JA = {};
