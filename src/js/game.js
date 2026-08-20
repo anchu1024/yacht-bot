@@ -140,7 +140,10 @@ function choose(name) {
     updateDisplay();
     GAME_HISTORY.push(deepcopy(GAME));
     DIALOGUE.game.updateCategory.log(name, score);
-    if (GAME.turn === 12) GAME.finish = true;
+    if (GAME.turn === 12) {
+        GAME.finish = true;
+        DIALOGUE.teach.finishMsg.log(GAME.score + (GAME.bonus ? 35 : 0));
+    }
     return score;
 }
 

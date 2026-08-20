@@ -130,6 +130,7 @@ Please make sure it matches the Yacht game you are playing on your side.
             `You should choose the category: [bold]$1[/]. Category Point : $2, Expected Score : $3`,
         ),
         rollPrompt: new Dialogue(`[red]\[ERROR\] Enter your dice rolls first`),
+        finishMsg: new Dialogue("Game finished! Well done! Your score: $1"),
     },
     welcome: new Dialogue(
         "[bold]Welcome to Yacht Bot![/] Here you can [bold]play Yacht[/], and I can be [bold]your Yacht teacher[/]!",
